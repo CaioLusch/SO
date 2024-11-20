@@ -41,14 +41,14 @@ def initialize_simulation(S, C, P, A):
     
     # Aguarda todos os veículos finalizarem
     for v in controle.vehicles:
-        print(f'for de veiculos finalizando')
+        #print(f'for de veiculos finalizando')
         v.join()
     
     print(f'depois do for de veiculos')
     
     # Aguarda todos os pontos de redistribuição finalizarem
     for point in controle.redistribution_points:
-        print(f'ponto de redistribuicao {i+1} finalizado')
+        #print(f'ponto de redistribuicao {i+1} finalizado')
         point.stop()  # Para a thread de cada ponto de redistribuição
         point.join()  # Aguarda o término da thread do ponto de redistribuição
     
@@ -69,5 +69,5 @@ P >> A >> C
 
 if __name__ == "__main__":
     controle.setup_global()
-    S, C, P, A = 5, 2, 5, 2  # Configurações menores para teste
+    S, C, P, A = 10, 2, 20, 3  # Configurações menores para teste
     initialize_simulation(S, C, P, A)

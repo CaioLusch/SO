@@ -13,9 +13,10 @@ class Package(threading.Thread):
         self.origin = origin
         self.destination = destination
         self.file_path = f"Pacote_{self.id}_log.txt"
+
         self.origin.add_package(self)
         self.started = False  # Para controlar a criação do pacote
-        self.lock = threading.Lock()
+        #self.lock = threading.Lock()
         self.start()  # Inicia a thread
 
     def run(self):
@@ -61,6 +62,7 @@ class RedistributionPoint(threading.Thread):
         return None
 
     def stop(self):
+        print(f'ponto de redistribuicao {self.id} finalizado')
         self.running = False  # Permite parar a thread de forma controlada
 
 
@@ -91,6 +93,10 @@ class Vehicle(threading.Thread):
     def run(self):
         while self.running:
             
+            # Log da posição atual dos pacotes deste veículo
+            for package in self.load:
+                controle.log_event(f"Passando pelo ponto {self.current_point.id}", package.file_path)
+
             # Carrega encomendas no ponto atual
             #self.load.clear()
             for _ in range(self.capacity - len(self.load)):
@@ -99,14 +105,14 @@ class Vehicle(threading.Thread):
                     self.load.append(package)
                     controle.log_event(f"Carregado no veículo {self.id} no ponto {self.current_point.id}", package.file_path)
                     print(f"[{time.strftime('%H:%M:%S')}] Carregado no veículo {self.id} no ponto {self.current_point.id}")
-                    time.sleep(random.uniform(0.5, 3))  # Tempo de carregamento de cada encomenda
+                    time.sleep(random.uniform(0.2, 1))  # Tempo de carregamento de cada encomenda
                 else:
                     break
             
             # Adquire o próximo ponto
             next_point = self.points[(self.points.index(self.current_point) + 1) % len(self.points)]
             print(f"[{time.strftime('%H:%M:%S')}] Veículo {self.id} partindo do ponto {self.current_point.id} para o ponto {next_point.id}")
-            time.sleep(random.uniform(0.5, 2))  # Tempo de viagem lento entre 2 e 5 segundos
+            time.sleep(random.uniform(0.2, 1))  # Tempo de viagem lento entre 2 e 5 segundos
 
             # Descarrega encomendas no ponto de destino
             for package in self.load[:]:
@@ -120,8 +126,8 @@ class Vehicle(threading.Thread):
             self.current_point = next_point
 
             # Verifica se ainda há encomendas a serem carregadas, ou descarregadas DESTE carro
-            #if not self.load and not controle.packages_waiting:
-            if not self.load and not any(point.queue for point in self.points):
+            #if not self.load and controle.packages_waiting == 0:
+            if not self.load and controle.packages_waiting == 0:
                 self.stop()
     
     def stop(self):
