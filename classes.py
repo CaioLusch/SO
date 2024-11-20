@@ -2,7 +2,7 @@
 import threading
 import time
 import random
-from controle import packages_in_transit
+import controle
 
 # Função de ponto de redistribuição
 class RedistributionPoint(threading.Thread):
@@ -22,7 +22,7 @@ class RedistributionPoint(threading.Thread):
         with self.lock:
             self.queue.append(package)
             self.sem.release()  # Incrementa o semáforo, indicando nova encomenda
-            packages_in_transit.set()  # Indica que ainda há encomendas em trânsito
+            controle.packages_in_transit.set()  # Indica que ainda há encomendas em trânsito
 
     def dispatch_package(self):
         self.sem.acquire()
@@ -46,7 +46,7 @@ class Vehicle(threading.Thread):
         self.load = []
 
     def run(self):
-        while packages_in_transit.is_set():
+        while controle.packages_in_transit.is_set():
             
             # Move para o próximo ponto
             next_point = self.points[(self.points.index(self.current_point) + 1) % len(self.points)]
@@ -76,7 +76,7 @@ class Vehicle(threading.Thread):
 
             # Verifica se ainda há encomendas em trânsito
             if not any(point.queue for point in self.points) and not self.load:
-                packages_in_transit.clear()  # Encerra se todas as encomendas foram entregues
+                controle.packages_in_transit.clear()  # Encerra se todas as encomendas foram entregues
 
 
 # classe para as encomendas
@@ -111,3 +111,5 @@ class Package(threading.Thread):
         self.join()  # Aguarda a thread do pacote finalizar corretamente
 
 
+if __name__ == "__main__":
+    pass

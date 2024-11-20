@@ -6,9 +6,7 @@ import time
 from classes import RedistributionPoint
 from classes import Vehicle
 from classes import Package
-from controle import redistribution_points
-from controle import vehicles
-from controle import packages_in_transit
+import controle
 
 # Inicialização da simulação com argumentos
 def initialize_simulation(S, C, P, A):
@@ -18,7 +16,7 @@ def initialize_simulation(S, C, P, A):
     for i in range(S):
         print(f'Criando o ponto {i+1} de distribuicao')
         redistribution_point = RedistributionPoint(i)
-        redistribution_points.append(redistribution_point)
+        controle.redistribution_points.append(redistribution_point)
         redistribution_point.start()  # Iniciar a thread
     
     print(f'{S} pontos criados e inicializados com sucesso')
@@ -26,8 +24,8 @@ def initialize_simulation(S, C, P, A):
     # Cria C veículos, cada um com id 'i' e a capacidade A
     for i in range(C):
         print(f'Criando veiculo {i+1}')
-        vehicle = Vehicle(i, A, redistribution_points)
-        vehicles.append(vehicle)
+        vehicle = Vehicle(i, A, controle.redistribution_points)
+        controle.vehicles.append(vehicle)
         vehicle.start()  # Inicia a thread do veículo
     
     print(f'Veiculos criados com sucesso')
@@ -36,21 +34,21 @@ def initialize_simulation(S, C, P, A):
     for i in range(P):
         print(f'Criando encomenda {i+1}')
         #gerar encomenda em algum ponto aleatorio 
-        origin = random.choice(redistribution_points)
-        destination = random.choice([p for p in redistribution_points if p != origin])
+        origin = random.choice(controle.redistribution_points)
+        destination = random.choice([p for p in controle.redistribution_points if p != origin])
         Package(i, origin, destination)  # Inicia o pacote como uma thread
     
     print(f'Encomendas criadas com sucessos')
     
     # Aguarda todos os veículos finalizarem
-    for v in vehicles:
+    for v in controle.vehicles:
         print(f'for de veiculos finalizando')
         v.join()
     
     print(f'depois do for de veiculos')
     
     # Aguarda todos os pontos de redistribuição finalizarem
-    for point in redistribution_points:
+    for point in controle.redistribution_points:
         print(f'ponto de redistribuicao {i+1} finalizado')
         point.stop()  # Para a thread de cada ponto de redistribuição
         point.join()  # Aguarda o término da thread do ponto de redistribuição
@@ -69,5 +67,8 @@ A = espacos de carga para cada veiculos (todas as encomendas ocupam exatamente 1
 P >> A >> C
 
 """
-S, C, P, A = 5, 2, 5, 2  # Configurações menores para teste
-initialize_simulation(S, C, P, A)
+
+if __name__ == "__main__":
+    controle.setup_global()
+    S, C, P, A = 5, 2, 5, 2  # Configurações menores para teste
+    initialize_simulation(S, C, P, A)
