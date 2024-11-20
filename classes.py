@@ -26,9 +26,10 @@ class Package(threading.Thread):
 
     def stop(self):
         """Método para parar a thread após o pacote ser entregue"""
-        self.log_event(f"Encomenda {self.id} finalizada")
+        controle.log_event(f"Encomenda {self.id} finalizada", self.file_path)
         print(f"Encomenda {self.id} finalizada")
-        self.join()  # Aguarda a thread do pacote finalizar corretamente
+        #self.join()  # Aguarda a thread do pacote finalizar corretamente
+        
 
 
 # Função de ponto de redistribuição
@@ -48,14 +49,15 @@ class RedistributionPoint(threading.Thread):
     def add_package(self, package):
         with self.lock:
             self.queue.append(package)
+            controle.packages_waiting += 1
             self.sem.release()  # Incrementa o semáforo, indicando nova encomenda
-            controle.packages_in_transit.set()  # Indica que ainda há encomendas em trânsito
+            #controle.packages_in_transit.set()  # Indica que ainda há encomendas em trânsito
 
     def dispatch_package(self) -> type[Package] | None:
-        self.sem.acquire()
         with self.lock:
-            if self.queue:
-                return self.queue.pop(0)
+            if (self.sem.acquire(blocking=False)): # if semáforo > 0, entra e decrementa 1 do semáforo
+                controle.packages_waiting -= 1
+                return self.queue.pop() # só retorna se tiver algum pacote (semáforo estava > 0)
         return None
 
     def stop(self):
@@ -71,18 +73,27 @@ class Vehicle(threading.Thread):
         self.points = points
         self.current_point = random.choice(self.points)
         self.load: list[type[Package]] = []
+        self.file_path = f"Carro_{self.id}_log.txt"
+        self.running = True
 
+    '''
+        Comportamento do veículo:
+            - trafega de ponto a ponto na ordem da lista CIRCULAR de pontos de redistribuição
+        
+        rotina:
+            1. carrega o máximo de encomendas que puder do ponto atual
+            2. adquire qual será o próximo destino
+            3. descarrega as encomendas cujo destino é o próximo ponto no próximo ponto
+            4. atualiza ponto atual
+            5. PARA EXECUÇÃO se todas as encomendas já foram carregadas (por qualquer carro)
+                e se este carro não estiver carregando nenhuma encomenda
+    '''
     def run(self):
-        while controle.packages_in_transit.is_set():
+        while self.running:
             
-            # Move para o próximo ponto
-            next_point = self.points[(self.points.index(self.current_point) + 1) % len(self.points)]
-            print(f"[{time.strftime('%H:%M:%S')}] Veículo {self.id} partindo do ponto {self.current_point.id} para o ponto {next_point.id}")
-            time.sleep(random.uniform(0.5, 2))  # Tempo de viagem lento entre 2 e 5 segundos
-
             # Carrega encomendas no ponto atual
-            self.load.clear()
-            for _ in range(self.capacity):
+            #self.load.clear()
+            for _ in range(self.capacity - len(self.load)):
                 package = self.current_point.dispatch_package()
                 if package:
                     self.load.append(package)
@@ -91,6 +102,11 @@ class Vehicle(threading.Thread):
                     time.sleep(random.uniform(0.5, 3))  # Tempo de carregamento de cada encomenda
                 else:
                     break
+            
+            # Adquire o próximo ponto
+            next_point = self.points[(self.points.index(self.current_point) + 1) % len(self.points)]
+            print(f"[{time.strftime('%H:%M:%S')}] Veículo {self.id} partindo do ponto {self.current_point.id} para o ponto {next_point.id}")
+            time.sleep(random.uniform(0.5, 2))  # Tempo de viagem lento entre 2 e 5 segundos
 
             # Descarrega encomendas no ponto de destino
             for package in self.load[:]:
@@ -103,9 +119,13 @@ class Vehicle(threading.Thread):
             # Atualiza o ponto atual
             self.current_point = next_point
 
-            # Verifica se ainda há encomendas em trânsito
-            if not any(point.queue for point in self.points) and not self.load:
-                controle.packages_in_transit.clear()  # Encerra se todas as encomendas foram entregues
+            # Verifica se ainda há encomendas a serem carregadas, ou descarregadas DESTE carro
+            #if not self.load and not controle.packages_waiting:
+            if not self.load and not any(point.queue for point in self.points):
+                self.stop()
+    
+    def stop(self):
+        self.running = False  # Permite parar a thread de forma controlada
 
 
 if __name__ == "__main__":
