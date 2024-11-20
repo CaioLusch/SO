@@ -3,15 +3,14 @@ import os
 import random
 import time
 
-from classes import RedistributionPoint
-from classes import Vehicle
-from classes import Package
 import controle
+
+from classes import RedistributionPoint, Vehicle, Package
 
 # Inicialização da simulação com argumentos
 def initialize_simulation(S, C, P, A):
     print("---- | Iniciando a simulação da rede de entregas | ----\n")
-    
+
     # Cria um total de S pontos de redistribuição, cada um contendo a id 'i'
     for i in range(S):
         print(f'Criando o ponto {i+1} de distribuicao')
