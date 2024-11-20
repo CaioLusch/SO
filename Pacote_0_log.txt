@@ -1,0 +1,2 @@
+[2024-11-20 15:39:38] Encomenda criada no ponto 4 com destino ao ponto 3
+[2024-11-20 15:39:40] Carregado no veículo 1 no ponto 4
