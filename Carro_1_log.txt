@@ -1,0 +1,2 @@
+[2024-11-25 08:19:05] Veículo 1 está passando reto pelo ponto 3, pois não há encomenda com destino aqui.
+[2024-11-25 08:19:06] Veículo 1 está passando reto pelo ponto 4, pois não há encomenda com destino aqui.

@@ -1,0 +1,5 @@
+[2024-11-25 08:18:56] Encomenda criada no ponto 3 com destino ao ponto 1
+[2024-11-25 08:19:06] Carregada encomenda 8 no veículo 0 no ponto 3
+[2024-11-25 08:19:09] Passando pelo ponto 1, carga atual: 2 / 2
+[2024-11-25 08:19:09] Encomenda 8 descarregada no ponto 1
+[2024-11-25 08:19:09] Encomenda 8 finalizada
